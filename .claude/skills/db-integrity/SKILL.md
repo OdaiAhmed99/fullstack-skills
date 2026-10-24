@@ -22,5 +22,5 @@ Quick check: `grep -rn "<field_name> = models" backend/` before adding.
 - CI: `python manage.py makemigrations --check --dry-run`.
 
 ## Connection
-- Postgres from env vars (`POSTGRES_*`), `CONN_MAX_AGE=60`, `CONN_HEALTH_CHECKS=True`.
+- Local: SQLite when `POSTGRES_HOST` is empty - keep code database-neutral (no Postgres-only lookups without a fallback). Docker/prod: Postgres from env vars (`POSTGRES_*`), `CONN_MAX_AGE=60`, `CONN_HEALTH_CHECKS=True`.
 - In Docker the host is the service name (`db`), never `localhost`. The backend waits for the db healthcheck.

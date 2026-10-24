@@ -1,9 +1,17 @@
-"""Settings read from the environment (.env via docker compose). No secret lives in this file."""
+"""Settings read from the environment. No secret lives in this file.
+
+Local (no Docker): the project-root .env is loaded here; with no POSTGRES_HOST it uses SQLite,
+with no REDIS_URL it uses in-memory cache/channels and runs Celery tasks inline.
+Docker: compose sets POSTGRES_HOST and REDIS_URL, so Postgres and Redis are used.
+"""
 import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR.parent / ".env")  # never overrides variables already set (compose wins)
 
 
 def env_list(name, default=""):
@@ -67,26 +75,35 @@ TEMPLATES = [
     }
 ]
 
-# --- Database: host is the compose service name, never localhost ---
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "app"),
-        "USER": os.environ.get("POSTGRES_USER", "app"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
-        "HOST": os.environ.get("POSTGRES_HOST", "db"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
-        "CONN_MAX_AGE": 60,
-        "CONN_HEALTH_CHECKS": True,
+# --- Database: Postgres when POSTGRES_HOST is set (Docker: the service name "db"), else SQLite ---
+if os.environ.get("POSTGRES_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", "app"),
+            "USER": os.environ.get("POSTGRES_USER", "app"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "HOST": os.environ["POSTGRES_HOST"],
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+            "CONN_MAX_AGE": 60,
+            "CONN_HEALTH_CHECKS": True,
+        }
     }
-}
+else:
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 
-REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}}
-CHANNEL_LAYERS = {"default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [REDIS_URL]}}}
-
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
+# --- Redis: optional. Without it: in-memory cache and websocket layer, Celery tasks run inline ---
+REDIS_URL = os.environ.get("REDIS_URL", "")
+if REDIS_URL:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}}
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [REDIS_URL]}}}
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
+    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+    CELERY_TASK_ALWAYS_EAGER = True  # .delay() runs the task immediately, no worker needed
+    CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 

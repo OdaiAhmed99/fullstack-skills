@@ -3,6 +3,11 @@ name: fullstack
 x-backend: &backend
   build: ./backend
   env_file: .env
+  environment:          # Docker uses Postgres and Redis (local run uses SQLite, no Redis)
+    POSTGRES_HOST: db
+    REDIS_URL: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/1
+    CELERY_RESULT_BACKEND: redis://redis:6379/2
   volumes:
     - ./backend:/app
     - static:/app/staticfiles
@@ -46,6 +51,8 @@ services:
   frontend:
     build: ./frontend
     env_file: .env
+    environment:
+      IN_DOCKER: "1"
     volumes:
       - ./frontend:/app
       - /app/node_modules

@@ -9,7 +9,9 @@ fullstack-skills/
   CLAUDE.md               # this file - read every session
   business.md             # the domain: study case, roles, records, rules - asked at project start
   docker-compose.yml      # db, redis, backend, celery, beat, frontend, nginx
-  run.ps1                 # start/restart everything cleanly (-Stop, -Logs, -Reset, -Status)
+  run.ps1                 # local run, no Docker: SQLite, no Redis (-Stop, -Status)
+  run-docker.ps1          # full Docker stack: Postgres, Redis, nginx (-Stop, -Logs, -Reset, -Status)
+  docs/setup-docker-redis.md  # optional: install Docker, run Redis, Celery worker - clean steps
   README.md               # run, install the skills in Claude Code, push to GitHub
   LICENSE                 # MIT
   .env.example            # copy to .env (never commit .env)
@@ -22,23 +24,22 @@ fullstack-skills/
 
 ## Run locally
 
-```bash
-.\run.ps1            # Windows: stops the old stack, frees the port, builds, starts, waits until healthy
-# or by hand:
-cp .env.example .env
-docker compose run --rm backend python manage.py makemigrations users   # once, then commit it
-docker compose up --build
-# http://localhost  (nginx)   - API under /api/, admin under /admin/
-docker compose exec backend python manage.py createsuperuser
+No Docker needed - SQLite database, no Redis (cache in memory, Celery tasks run inline):
+
+```powershell
+.\run.ps1            # stops the old run, frees ports 8000/5173, installs what is missing, migrates, starts both
+# http://localhost:5173 (app)  - API http://localhost:8000/api/docs/ - admin http://localhost:8000/admin/
+.venv\Scripts\python backend\manage.py createsuperuser
 ```
 
+Needs Python 3.11+ and Node.js 20+. Want Redis or the full Docker stack (Postgres + Redis + nginx)? Follow `docs/setup-docker-redis.md`, then `.\run-docker.ps1`.
 ## Start here: the business
 
 **Before building anything, read [business.md](business.md).** If it still has unanswered questions (`_answer:_` lines), stop and ask the user those questions - a few at a time, in plain words - then write the answers into `business.md`. Don't guess the domain. Every app, model name, role, permission and workflow is taken from that file; when the user later changes a decision, update it there first.
 
 ## Running the app (rule for Claude)
 
-When the user asks to run, start, restart or "it is stuck": run `.\run.ps1` - never a bare `docker compose up`. It always stops the old stack, kills whatever holds the nginx port, rebuilds, starts in the background and waits for `/api/core/health/`. Then tell the user the URLs, or - if it failed - the error from the logs it printed and the one next step. `-Stop` stops everything; `-Reset` also deletes the database (ask first).
+When the user asks to run, start, restart or "it is stuck": run `.\run.ps1` (local, no Docker) - or `.\run-docker.ps1` if they use Docker - never a bare `runserver` or `docker compose up`. Both always stop the old run first, free the ports, start in the background and wait for `/api/core/health/`. If the user asks for Redis, Docker or a real Celery worker, walk them through `docs/setup-docker-redis.md` one step at a time and check each step worked before the next. Then tell the user the URLs, or - if it failed - the error from the logs it printed and the one next step. `-Stop` stops everything; `run-docker.ps1 -Reset` also deletes the Docker database (ask first).
 
 ## Read first
 

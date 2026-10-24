@@ -1,26 +1,28 @@
 # fullstack-skills
 
 A reusable template and Claude Code skill set for any project with this structure: a **Django REST** API,
-a **Vite/React** frontend, **nginx** in front, **Postgres + Redis**, **Celery** and **Channels**, all run locally by
-`docker compose`. The skills teach Claude one way of working: how to build an app, the shared API layer, dropdowns,
+a **Vite/React** frontend, **nginx** in front, **Postgres + Redis**, **Celery** and **Channels**. It runs locally with no Docker
+(SQLite, no Redis); Docker is optional. The skills teach Claude one way of working: how to build an app, the shared API layer, dropdowns,
 background jobs, database checks, security, and the handoff to the frontend.
 
-## Run it
+## Run it (no Docker)
+
+Needs Python 3.11+ and Node.js 20+. Uses SQLite and no Redis.
 
 ```powershell
-.\run.ps1            # stops the old stack, frees the port, builds, starts, waits until healthy
-.\run.ps1 -Logs      # same, then follow the logs
-.\run.ps1 -Stop      # stop everything
+.\run.ps1            # stops the old run, frees ports, installs what is missing, migrates, starts backend + frontend
+.\run.ps1 -Stop      # stop both
 .\run.ps1 -Status    # what is running
-.\run.ps1 -Reset     # stop and DELETE the database, then start fresh
 ```
 
-First run only: `docker compose run --rm backend python manage.py makemigrations users`, then commit the migration.
+Open http://localhost:5173 (app), http://localhost:8000/api/docs/ (Swagger), http://localhost:8000/admin/.
+Create an admin: `.venv\Scripts\python backend\manage.py createsuperuser`.
 
-Open http://localhost (app), http://localhost/api/docs/ (Swagger), http://localhost/admin/.
-Create an admin: `docker compose exec backend python manage.py createsuperuser`.
+## Optional: Redis or the full Docker stack
 
-On macOS/Linux, run it by hand: `cp .env.example .env && docker compose up --build`.
+Step-by-step in [docs/setup-docker-redis.md](docs/setup-docker-redis.md): install Docker Desktop, start Redis
+(`REDIS_URL=redis://localhost:6379/0`), run a Celery worker - or run everything (Postgres, Redis, nginx) with
+`.\run-docker.ps1` (`-Stop`, `-Logs`, `-Status`, `-Reset`).
 
 ## Install in Claude Code
 
