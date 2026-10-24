@@ -81,6 +81,7 @@ Typical requests and the skills they pull in:
 | "Build the orders page in React" | `frontend-structure` -> `frontend-integration`, reading `docs/frontend-api/orders/` |
 | "Is this ready for a PR?" | `clean-code-review` -> `security-check` -> `api-doc` -> `frontend-handoff` |
 | "Run it / add a service" | `docker-stack` |
+| "Connect my app to Claude / AI" / "how do I connect?" | `mcp-connection` (asks before building anything) |
 
 Changing a skill: edit its `SKILL.md`, keep it short, and update its row below. A rule that only one project needs belongs in `business.md` or this file, not in a skill.
 
@@ -102,6 +103,7 @@ Changing a skill: edit its `SKILL.md`, keep it short, and update its row below. 
 | `frontend-integration` | frontend: build a screen on the API (client, login, pickers, popups, errors) |
 | `frontend-structure` | frontend: folders (api per app + shared), responsive shared components, ask the user for images |
 | `docker-stack` | running the stack, adding a service |
+| `mcp-connection` | optional: give AI assistants your services through an MCP server in `mcp/` (+ optional plugin) - asks you first, and tells you how to connect |
 
 ## Testing
 
