@@ -1,0 +1,37 @@
+/* Design tokens - shared components use only these, never literal colors or pixel sizes. */
+:root {
+  --bg: #ffffff;
+  --surface: #f5f7f9;
+  --text: #1a2129;
+  --muted: #5d6a77;
+  --border: #d5dce3;
+  --accent: #1f5f8b;
+  --danger: #b3261e;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --radius: 6px;
+  --font: system-ui, "Segoe UI", Tahoma, sans-serif;
+
+  /* breakpoints (use in media queries): phone < 640px, tablet 640-1024px, desktop > 1024px */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12181e;
+    --surface: #1a2229;
+    --text: #e3e9ef;
+    --muted: #94a2af;
+    --border: #2c3843;
+    --accent: #6aaee0;
+    --danger: #f2827a;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+img { max-width: 100%; height: auto; }
+.page { padding: var(--space-3); max-width: 1200px; margin: 0 auto; }
+@media (min-width: 640px) { .page { padding: var(--space-4); } }
